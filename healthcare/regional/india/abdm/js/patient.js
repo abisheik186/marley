@@ -547,6 +547,7 @@ let setup_search_btn = function(dialog) {
 
 
 let create_abha_with_aadhaar = function(frm, d) {
+	console.log('inside create_abha_with_aadhar');
 	let txn_id = ''
 	let error_msg = ''
 	frappe.run_serially([
@@ -554,10 +555,16 @@ let create_abha_with_aadhaar = function(frm, d) {
 				method: 'healthcare.regional.india.abdm.utils.abdm_request',
 				args: {
 					'payload': {
-						"aadhaar": d.get_value('aadhaar')
+						"txnId":"12445",
+						"scope":["abha-enrol"],
+						"loginHint":"aadhar",
+						"to_encrypt": d.get_value('aadhaar'),
+						"otpSystem":"aadhar"
 					},
 					'url_key': 'generate_aadhaar_otp',
-					'req_type': 'Health ID'
+					'req_type': 'Health ID',
+					'to_be_enc':'loginId'
+					
 				},
 				freeze: true,
 				freeze_message: __('Sending OTP...'),
@@ -928,7 +935,7 @@ let show_id_card_dialog = function(frm, token) {
 			'req_type': 'Health ID',
 			'rec_headers': {
 				'X-Token': 'Bearer '+ token
-			},
+			}, 
 			'patient_name': frm.doc.name
 		},
 		freeze: true,
