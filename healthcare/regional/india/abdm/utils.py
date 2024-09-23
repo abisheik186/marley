@@ -6,6 +6,9 @@ import frappe
 
 from healthcare.regional.india.abdm.abdm_config import get_url
 
+import uuid
+from datetime import datetime
+
 
 @frappe.whitelist()
 def get_authorization_token():
@@ -14,11 +17,17 @@ def get_authorization_token():
 		{"company": frappe.defaults.get_user_default("Company"), "default": 1},
 		["client_id", "client_secret", "auth_base_url"],
 	)
+	print(client_id,client_secret,auth_base_url)
 
 	config = get_url("authorization")
 	auth_base_url = auth_base_url.rstrip("/")
 	url = auth_base_url + config.get("url")
-	payload = {"clientId": client_id, "clientSecret": client_secret}
+	print("auth url =",url)
+	payload = {
+		"clientId": client_id, 
+		"clientSecret": client_secret,
+		"grantType":"client_credentials"
+		}
 	if not auth_base_url:
 		frappe.throw(
 			title="Not Configured",
@@ -29,13 +38,20 @@ def get_authorization_token():
 	req.request = json.dumps(payload, indent=4)
 	req.url = url
 	req.request_name = "Authorization Token"
+	request_id=str(uuid.uuid4())
+	timestamp=datetime.utcnow().isoformat()+'z'
 	try:
 		response = requests.request(
 			method=config.get("method"),
 			url=url,
-			headers={"Content-Type": "application/json; charset=UTF-8"},
+			headers={
+				"Content-Type": "application/json",
+				"REQUEST-ID":request_id,
+				"TIMESTAMP":timestamp,
+				"X-CM-ID":"sbx"},
 			data=json.dumps(payload),
 		)
+		print(response.raise_for_status)
 		response.raise_for_status()
 		response = response.json()
 		req.response = json.dumps(response, indent=4)
@@ -53,7 +69,8 @@ def get_authorization_token():
 		req.insert(ignore_permissions=True)
 		traceback = f"Remote URL {url}\nPayload: {payload}\nTraceback: {e}"
 		frappe.log_error(message=traceback, title="Cant create session")
-		return auth_base_url, None, None
+		print(23)
+		return auth_base_url, None
 
 
 @frappe.whitelist()
@@ -69,22 +86,31 @@ def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, p
 		{"company": frappe.defaults.get_user_default("Company"), "default": 1},
 		[url_type],
 	)
+	print("base url =",base_url)
 	if not base_url:
 		frappe.throw(title="Not Configured", msg="Base URL not configured in ABDM Settings!")
 
 	config = get_url(url_key)
+	print("url key =",url_key)
 	base_url = base_url.rstrip("/")
 	url = base_url + config.get("url")
 	# Check the abdm_config, if the data need to be encypted, encrypts message
 	# Build payload with encrypted message
+	print("payload = ",payload)
+	print('b4 encr')
 	if config.get("encrypted"):
 		message = payload.get("to_encrypt")
+		print('message = ',message)
 		encrypted = get_encrypted_message(message)
+		print('efter encrypt')
 		if "encrypted_msg" in encrypted and encrypted["encrypted_msg"]:
 			payload[to_be_enc] = payload.pop("to_encrypt")
 			payload[to_be_enc] = encrypted["encrypted_msg"]
 
+	print('before get_authorozation_token')
+	print("payload = ",payload)
 	access_token, token_type = get_authorization_token()
+	print(access_token)
 
 	if not access_token:
 		frappe.throw(
@@ -93,10 +119,14 @@ def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, p
 		)
 
 	authorization = ("Bearer " if token_type == "bearer" else "") + access_token
+	request_id=str(uuid.uuid4())
+	timestamp=datetime.utcnow().isoformat()+'z'
 	headers = {
 		"Content-Type": "application/json",
 		"Accept": "application/json",
 		"Authorization": authorization,
+		"REQUEST-ID":request_id,
+		"TIMESTAMP":timestamp,
 	}
 	if rec_headers:
 		if isinstance(rec_headers, str):
@@ -109,9 +139,15 @@ def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, p
 	req.url = url
 	req.request_name = url_key
 	try:
+		print('line 133 inside try block of before api call')
 		response = requests.request(
-			method=config.get("method"), url=url, headers=headers, data=json.dumps(payload)
+			method=config.get("method"), 
+			url=url, headers=headers, 
+			data=json.dumps(payload)
 		)
+		print('line 115')
+		print(url)
+		print(response.json)
 		response.raise_for_status()
 		if url_key == "get_card":
 			pdf = response.content
@@ -136,6 +172,8 @@ def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, p
 
 	except Exception as e:
 		req.traceback = e
+		print("Exception block executed in abdm_request")
+		print(response.json)
 		req.response = json.dumps(response.json(), indent=4)
 		req.status = "Revoked"
 		req.insert(ignore_permissions=True)
@@ -162,6 +200,7 @@ def get_encrypted_message(message):
 			method=config.get("method"), url=url, headers={"Content-Type": "application/json"}
 		)
 
+		print("response of auth_cert",response)
 		response.raise_for_status()
 		pub_key = response.text
 		pub_key = (

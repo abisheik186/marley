@@ -1,15 +1,23 @@
 config = {
-	"authorization": {"method": "POST", "url": "/v0.5/sessions", "encrypted": False},
+	"authorization": {
+		"method": "POST", 
+		"url": "/hiecm/gateway/v3/sessions", 
+		"encrypted": False,
+		},
 	"exists_by_health_id": {
 		"method": "POST",
 		"url": "/v1/search/existsByHealthId",
 		"encrypted": False,
 	},
-	"verify_health_id": {"method": "POST", "url": "/v1/search/searchByHealthId", "encrypted": False},
+	"verify_health_id": {
+		"method": "POST", 
+		"url": "/v1/search/searchByHealthId", 
+		"encrypted": False
+		},
 	"generate_aadhaar_otp": {
 		"method": "POST",
-		"url": "/v1/registration/aadhaar/generateOtp",
-		"encrypted": False,
+		"url": "/v3/enrollment/request/otp",
+		"encrypted": True,
 	},
 	"generate_mobile_otp": {
 		"method": "POST",
@@ -41,8 +49,16 @@ config = {
 		"url": "/v2/registration/mobile/createHidViaMobile",
 		"encrypted": False,
 	},
-	"auth_cert": {"method": "GET", "url": "/v2/auth/cert", "encrypted": False},
-	"auth_init": {"method": "POST", "url": "/v2/auth/init", "encrypted": False},
+	"auth_cert": {
+		"method": "GET", 
+		"url": "/v2/auth/cert", 
+		"encrypted": False
+		},
+	"auth_init": {
+		"method": "POST", 
+		"url": "/v2/auth/init", 
+		"encrypted": False
+		},
 	"confirm_w_aadhaar_otp": {
 		"method": "POST",
 		"url": "/v2/auth/confirmWithAadhaarOtp",
@@ -53,7 +69,11 @@ config = {
 		"url": "/v2/auth/confirmWithMobileOTP",
 		"encrypted": True,
 	},
-	"get_acc_info": {"method": "GET", "url": "/v2/account/profile", "encrypted": False},
+	"get_acc_info": {
+		"method": "GET", 
+		"url": "/v2/account/profile", 
+		"encrypted": False
+		},
 	"generate_aadhaar_mobile_otp": {
 		"method": "POST",
 		"url": "/v1/registration/aadhaar/generateMobileOTP",
@@ -79,7 +99,11 @@ config = {
 		"url": "/v2/document/verify/mobile/otp",
 		"encrypted": True,
 	},
-	"get_card": {"method": "GET", "url": "/v1/account/getPngCard", "encrypted": False},
+	"get_card": {
+		"method": "GET", 
+		"url": "/v1/account/getPngCard", 
+		"encrypted": False
+		},
 }
 
 
