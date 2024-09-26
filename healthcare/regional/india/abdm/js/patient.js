@@ -555,11 +555,11 @@ let create_abha_with_aadhaar = function(frm, d) {
 				method: 'healthcare.regional.india.abdm.utils.abdm_request',
 				args: {
 					'payload': {
-						"txnId":"12445",
+						"txnId":"",
 						"scope":["abha-enrol"],
-						"loginHint":"aadhar",
+						"loginHint":"aadhaar",
 						"to_encrypt": d.get_value('aadhaar'),
-						"otpSystem":"aadhar"
+						"otpSystem":"aadhaar"
 					},
 					'url_key': 'generate_aadhaar_otp',
 					'req_type': 'Health ID',
@@ -586,6 +586,12 @@ let create_abha_with_aadhaar = function(frm, d) {
 						fieldname: 'otp',
 						fieldtype: 'Data',
 						reqd: 1
+					},
+					{
+						label:'Mobile number for ABHA communication',
+						fieldname:'mobile_for_abha',
+						fieldtype:'Data',
+						reqd:1
 					},
 					{
 						fieldname: 'resent_txn_id',
@@ -627,6 +633,8 @@ let create_abha_with_aadhaar = function(frm, d) {
 					primary_action_label: 'Create ABHA ID',
 					primary_action(values) {
 						dialog.get_primary_btn().attr('disabled', true);
+						const now = new Date();
+						const formattedTimeStamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(now.getMilliseconds()).padStart(3, '0')}`
 						frappe.call({
 							method: 'healthcare.regional.india.abdm.utils.abdm_request',
 							args: {
@@ -642,8 +650,24 @@ let create_abha_with_aadhaar = function(frm, d) {
 									"txnId": txn_id,
 									"username": dialog.get_value('username')
 								},
+								'payload':{
+									'authData':{
+										'authMethods':['otp'],
+										'otp':{
+											'timeStamp':formattedTimeStamp,
+											'txnId':txn_id,
+											'to_encrypt':dialog.get_value('otp'),
+											'mobile':dialog.get_value('mobile_for_abha'),
+										},
+										'consent':{
+											'code':'abha-enrollment',
+											'version':'1.4'
+										}
+									}
+								},
 								'url_key': 'create_abha_w_aadhaar',
-								'req_type': 'Health ID'
+								'req_type': 'Health ID',
+								'to_be_enc':'otpValue'
 							},
 							freeze: true,
 							freeze_message: __(`<br><br><br>Creating Health ID <br>

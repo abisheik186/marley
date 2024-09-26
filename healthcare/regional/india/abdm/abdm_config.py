@@ -41,8 +41,8 @@ config = {
 	},
 	"create_abha_w_aadhaar": {
 		"method": "POST",
-		"url": "/v1/registration/aadhaar/createHealthIdWithAadhaarOtp",
-		"encrypted": False,
+		"url": "/v3/enrollment/enrol/byAadhaar",
+		"encrypted": True,
 	},
 	"create_abha_w_mobile": {
 		"method": "POST",

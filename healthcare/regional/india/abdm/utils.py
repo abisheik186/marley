@@ -7,7 +7,7 @@ import frappe
 from healthcare.regional.india.abdm.abdm_config import get_url
 
 import uuid
-from datetime import datetime
+from datetime import datetime,timezone
 
 
 @frappe.whitelist()
@@ -40,6 +40,7 @@ def get_authorization_token():
 	req.request_name = "Authorization Token"
 	request_id=str(uuid.uuid4())
 	timestamp=datetime.utcnow().isoformat()+'z'
+	print('timestamp of auth token',timestamp)
 	try:
 		response = requests.request(
 			method=config.get("method"),
@@ -88,8 +89,7 @@ def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, p
 	)
 	print("base url =",base_url)
 	if not base_url:
-		frappe.throw(title="Not Configured", msg="Base URL not configured in ABDM Settings!")
-
+		frappe.throw(title="Not Configured", msg="Base URL not configured in ABDM Settings!")		
 	config = get_url(url_key)
 	print("url key =",url_key)
 	base_url = base_url.rstrip("/")
@@ -99,16 +99,20 @@ def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, p
 	print("payload = ",payload)
 	print('b4 encr')
 	if config.get("encrypted"):
+		if url_key == 'create_abha_w_aadhaar':
+			message = payload.get('authData',{}).get('otp',{}).get('to_encrypt')
 		message = payload.get("to_encrypt")
 		print('message = ',message)
 		encrypted = get_encrypted_message(message)
 		print('efter encrypt')
 		if "encrypted_msg" in encrypted and encrypted["encrypted_msg"]:
+			if url_key == 'create_abha_w_aadhaar':
+				payload['authData']['otp'][to_be_enc]
 			payload[to_be_enc] = payload.pop("to_encrypt")
 			payload[to_be_enc] = encrypted["encrypted_msg"]
 
 	print('before get_authorozation_token')
-	print("payload = ",payload)
+	print("payload with encryption = ",payload)
 	access_token, token_type = get_authorization_token()
 	print(access_token)
 
@@ -120,7 +124,10 @@ def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, p
 
 	authorization = ("Bearer " if token_type == "bearer" else "") + access_token
 	request_id=str(uuid.uuid4())
-	timestamp=datetime.utcnow().isoformat()+'z'
+	# timestamp=datetime.utcnow().isoformat()+'z'
+	utcnow=datetime.now(timezone.utc)
+	timestamp=utcnow.isoformat().replace('+00:00','Z')
+	print('timestamp of abdm request',timestamp)
 	headers = {
 		"Content-Type": "application/json",
 		"Accept": "application/json",
@@ -145,8 +152,10 @@ def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, p
 			url=url, headers=headers, 
 			data=json.dumps(payload)
 		)
-		print('line 115')
+		print('line 148')
 		print(url)
+		print('payload after api hit',payload)
+		print('header after api call',headers)
 		print(response.json)
 		response.raise_for_status()
 		if url_key == "get_card":
@@ -191,10 +200,13 @@ def get_encrypted_message(message):
 
 	config = get_url("auth_cert")
 	url = base_url + config.get("url")
+	url='https://healthidsbx.abdm.gov.in/api/v1/auth/cert'
 	req = frappe.new_doc("ABDM Request")
+	print('req =',req)
 	req.status = "Requested"
 	req.url = url
 	req.request_name = "auth_cert"
+	print('cert url =',url)
 	try:
 		response = requests.request(
 			method=config.get("method"), url=url, headers={"Content-Type": "application/json"}
@@ -226,21 +238,42 @@ def get_encrypted_message(message):
 		return None
 
 
+# def get_rsa_encrypted_message(message, pub_key):
+# 	# TODO:- Use cryptography
+# 	from base64 import b64decode, b64encode
+
+# 	from Crypto.Cipher import PKCS1_v1_5
+# 	from Crypto.PublicKey import RSA
+
+# 	message = bytes(message, "utf-8")
+# 	pubkey = b64decode(pub_key)
+# 	rsa_key = RSA.importKey(pubkey)
+# 	cipher = PKCS1_v1_5.new(rsa_key)
+# 	ciphertext = cipher.encrypt(message)
+# 	emsg = b64encode(ciphertext)
+# 	encrypted_msg = emsg.decode("UTF-8")
+# 	return encrypted_msg
 def get_rsa_encrypted_message(message, pub_key):
-	# TODO:- Use cryptography
-	from base64 import b64decode, b64encode
+	#TODO:- Use Cryptography
+    from base64 import b64decode, b64encode
+    from Crypto.Cipher import PKCS1_OAEP
+    from Crypto.PublicKey import RSA
+    from Crypto.Hash import SHA1
 
-	from Crypto.Cipher import PKCS1_v1_5
-	from Crypto.PublicKey import RSA
+    message = bytes(message, "utf-8")
+    
+    pubkey = b64decode(pub_key)
+    
+    rsa_key = RSA.importKey(pubkey)
+    
+    cipher = PKCS1_OAEP.new(rsa_key, hashAlgo=SHA1)
+    
+    ciphertext = cipher.encrypt(message)
 
-	message = bytes(message, "utf-8")
-	pubkey = b64decode(pub_key)
-	rsa_key = RSA.importKey(pubkey)
-	cipher = PKCS1_v1_5.new(rsa_key)
-	ciphertext = cipher.encrypt(message)
-	emsg = b64encode(ciphertext)
-	encrypted_msg = emsg.decode("UTF-8")
-	return encrypted_msg
+    emsg = b64encode(ciphertext)
+    encrypted_msg = emsg.decode("UTF-8")
+    
+    return encrypted_msg
 
 
 @frappe.whitelist()
