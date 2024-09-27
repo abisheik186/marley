@@ -22,6 +22,7 @@ def get_authorization_token():
 	config = get_url("authorization")
 	auth_base_url = auth_base_url.rstrip("/")
 	url = auth_base_url + config.get("url")
+	url = 'https://dev.abdm.gov.in/api/hiecm/gateway/v3/sessions'
 	print("auth url =",url)
 	payload = {
 		"clientId": client_id, 
@@ -99,18 +100,23 @@ def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, p
 	print("payload = ",payload)
 	print('b4 encr')
 	if config.get("encrypted"):
+		message = payload.get("to_encrypt")
 		if url_key == 'create_abha_w_aadhaar':
 			message = payload.get('authData',{}).get('otp',{}).get('to_encrypt')
-		message = payload.get("to_encrypt")
 		print('message = ',message)
 		encrypted = get_encrypted_message(message)
-		print('efter encrypt')
+		print('efter encrypt encrypted =',encrypted)
 		if "encrypted_msg" in encrypted and encrypted["encrypted_msg"]:
-			if url_key == 'create_abha_w_aadhaar':
-				payload['authData']['otp'][to_be_enc]
-			payload[to_be_enc] = payload.pop("to_encrypt")
-			payload[to_be_enc] = encrypted["encrypted_msg"]
-
+			if url_key == 'create_abha_w_aadhaar' and 'to_encrypt' in payload['authData']['otp']:
+				payload['authData']['otp'][to_be_enc] = payload['authData']['otp'].pop('to_encrypt')
+				print(12)
+				payload['authData']['otp'][to_be_enc] = encrypted['encrypted_msg']
+				print(34)
+			else:
+				print(56)
+				payload[to_be_enc] = payload.pop("to_encrypt")
+				payload[to_be_enc] = encrypted["encrypted_msg"]
+		print('payload after enc',payload)
 	print('before get_authorozation_token')
 	print("payload with encryption = ",payload)
 	access_token, token_type = get_authorization_token()

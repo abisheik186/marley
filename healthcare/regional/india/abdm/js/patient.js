@@ -638,18 +638,6 @@ let create_abha_with_aadhaar = function(frm, d) {
 						frappe.call({
 							method: 'healthcare.regional.india.abdm.utils.abdm_request',
 							args: {
-								'payload': {
-									"email": frm.doc.email || '',
-									"firstName": frm.doc.first_name || '',
-									"lastName": frm.doc.last_name || '',
-									"middleName": frm.doc.middle_name || '',
-									"mobile": dialog.get_value('mobile') ?
-										dialog.get_value('mobile') : frm.doc.mobile,
-									"otp": dialog.get_value('otp'),
-									"password": dialog.get_value('password'),
-									"txnId": txn_id,
-									"username": dialog.get_value('username')
-								},
 								'payload':{
 									'authData':{
 										'authMethods':['otp'],
@@ -658,11 +646,11 @@ let create_abha_with_aadhaar = function(frm, d) {
 											'txnId':txn_id,
 											'to_encrypt':dialog.get_value('otp'),
 											'mobile':dialog.get_value('mobile_for_abha'),
-										},
-										'consent':{
-											'code':'abha-enrollment',
-											'version':'1.4'
 										}
+									},
+									'consent':{
+										'code':'abha-enrollment',
+										'version':'1.4'
 									}
 								},
 								'url_key': 'create_abha_w_aadhaar',
