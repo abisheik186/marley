@@ -151,11 +151,13 @@ def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, p
 	req.request = json.dumps(payload, indent=4)
 	req.url = url
 	req.request_name = url_key
+	print('url_key of abdm request',url_key)
 	try:
 		print('line 133 inside try block of before api call')
 		response = requests.request(
 			method=config.get("method"), 
-			url=url, headers=headers, 
+			url=url, 
+			headers=headers, 
 			data=json.dumps(payload)
 		)
 		print('line 148')
@@ -188,7 +190,7 @@ def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, p
 	except Exception as e:
 		req.traceback = e
 		print("Exception block executed in abdm_request")
-		print(response.json)
+		# print(response.json)
 		req.response = json.dumps(response.json(), indent=4)
 		req.status = "Revoked"
 		req.insert(ignore_permissions=True)

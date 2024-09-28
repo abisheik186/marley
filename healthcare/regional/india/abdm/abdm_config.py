@@ -101,7 +101,7 @@ config = {
 	},
 	"get_card": {
 		"method": "GET", 
-		"url": "/v1/account/getPngCard", 
+		"url": "/v3/profile/account/abha-card", 
 		"encrypted": False
 		},
 }
