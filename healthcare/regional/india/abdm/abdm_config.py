@@ -103,7 +103,12 @@ config = {
 		"method": "GET", 
 		"url": "/v3/profile/account/abha-card", 
 		"encrypted": False
-		},
+	},
+	"verify_using_abha_number":{
+		"method":"POST",
+		"url":"/v3/profile/login/request/otp",
+		"encrypted":True
+	},
 }
 
 

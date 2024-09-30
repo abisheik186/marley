@@ -53,10 +53,17 @@ let search_by_abha_address = function (frm) {
 					method: 'healthcare.regional.india.abdm.utils.abdm_request',
 					args: {
 						'payload': {
-							"healthId": dialog.get_value('abha_address')
+							"scope":[
+								"abha-login",
+								"aadhaar-verify"
+							],
+							"loginHint":"abha-number",
+							"to_encrypt": dialog.get_value('abha_address'),
+							"otpSystem":"aadhaar"
 						},
-						'url_key': 'verify_health_id',
-						'req_type': 'Health ID'
+						'url_key': 'verify_using_abha_number',
+						'req_type': 'Health ID',
+						"to_be_enc":'loginId'
 					},
 					freeze: true,
 					freeze_message: __('<br><br>Searching...'),
