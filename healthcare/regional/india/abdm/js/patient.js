@@ -140,12 +140,15 @@ let abha_otp_verify = function(frm,txnId){
 					freeze_message:__('verifying OTP...'),
 					callback:function(data){
 						if(data.message){
-							console.log('inside success response')
+							console.log('X-Token after verification : ',data.message.token)
 							frappe.show_alert({
 								message:__('OTP verified successfully'),
 								indicator: 'green'
 							});
 							dialog.hide();
+							get_patient_details(frm,data.message.token);
+						} else {
+							frappe.throw(__('Failed to verify OTP. Please try again.'));
 						}
 					}
 				});
@@ -153,7 +156,32 @@ let abha_otp_verify = function(frm,txnId){
 		}
 	});
 	dialog.show();
-}
+};
+let get_patient_details = function(frm,txnId){
+	frappe.call({
+		method: 'healthcare.regional.india.abdm.utils.abdm_request',
+		args:{
+			'payload': {
+				'txnId':txnId
+			},
+			'url_key':'get_patient_details',
+			'req_type':'Health ID'
+		},
+		freeze:true,
+		freeze_message:__('Fetching patient details...'),
+		callback: function(data){
+			if(Response.message){
+				set_data_to_form(frm,data.message);
+				frappe.show_alert({
+					message:__('Patient details fetched successfully'),
+					indicator:'green'
+				});
+			} else {
+				frappe.throw(__('Failed to fetch patient details'));
+			}
+		}
+	});
+};
 
 let verify_health_id = function (frm, recieved_abha_number = '') {
 	let d = new frappe.ui.Dialog({
