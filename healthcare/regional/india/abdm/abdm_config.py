@@ -109,6 +109,12 @@ config = {
 		"url":"/v3/profile/login/request/otp",
 		"encrypted":True
 	},
+	"verify_abha_otp":{
+		"method":'POST',
+		"url":"/v3/profile/login/verify",
+		"encrypted":True
+	},
+
 }
 
 

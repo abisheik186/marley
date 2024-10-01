@@ -68,18 +68,24 @@ let search_by_abha_address = function (frm) {
 					freeze: true,
 					freeze_message: __('<br><br>Searching...'),
 					callback: function (data) {
-						if (data.message['healthIdNumber']) {
-							show_message(dialog, 'Status:' + data.message['status'], 'green', '', 'abha_address')
-							dialog.set_values ({
-								'abha_number': data.message['healthIdNumber']
-							})
+						console.log(12)
+						console.log('data requesting otp',data)
+						if (data.message['txnId']) {
+							console.log('123')
+							show_message(dialog, 'Status:' + data.message['message'], 'green', '', 'abha_address')
+							// dialog.set_values ({
+							// 	'abha_number': data.message['healthIdNumber']
+							// })
 							dialog.hide();
-							if (data.message['healthIdNumber']) {
-								verify_health_id(frm, data.message['healthIdNumber'])
+							if (data.message['txnId']) {
+								console.log('1234')
+								abha_otp_verify(frm,data.message['txnId'])
+								console.log('after abha_otp_function')
+								// verify_health_id(frm, data.message['txn'])
 							}
 						} else {
 							show_message(dialog, data.message.message, '#fa6969',
-											data.message.details[0]['message'], 'abha_address')
+											data.message['message'], 'abha_address')
 							}
 					}
 				});
@@ -88,7 +94,65 @@ let search_by_abha_address = function (frm) {
 	});
 	dialog.show();
 }
-
+let abha_otp_verify = function(frm,txnId){
+	console.log('inside abha_otp_verify')
+	let dialog = new frappe.ui.Dialog({
+		title: 'Enter Recieved ABHA OTP',
+		fields:[
+			{
+				label: 'Enter OTP',
+				fieldname:'abhaOtp',
+				fieldtype:'Data'
+			}
+		],
+		primary_action_label:'OK',
+		primary_action(values){
+			if (!dialog.get_value('abhaOtp')){
+				frappe.throw({
+					message:__(`otp is required`),
+					title:__('ABHA OTP Required')
+				});
+			} else{
+				show_message(dialog,'validating...','black','','abhaOtp')
+				frappe.call({
+					method:'healthcare.regional.india.abdm.utils.abdm_request',
+					args:{
+						'payload': {
+							"scope":[
+								'abha-login',
+								'aadhaar-verify'
+							],
+							'authData':{
+								"authMethods":[
+									"otp"
+								],
+								"otp":{
+									'txnId':txnId,
+									'to_encrypt':dialog.get_value('abhaOtp')
+								}
+							}
+						},
+						'url_key':'verify_abha_otp',
+						'req_type':'Health ID',
+						"to_be_enc":'otpValue'
+					},
+					freeze:true,
+					freeze_message:__('verifying OTP...'),
+					callback:function(response){
+						if(response.message && response.message.success){
+							frappe.show_alert({
+								message:__('OTP verified successfully'),
+								indicator: 'green'
+							});
+							dialog.hide();
+						}
+					}
+				});
+			}
+		}
+	});
+	dialog.show();
+}
 
 let verify_health_id = function (frm, recieved_abha_number = '') {
 	let d = new frappe.ui.Dialog({
