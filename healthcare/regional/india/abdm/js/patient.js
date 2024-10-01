@@ -138,8 +138,9 @@ let abha_otp_verify = function(frm,txnId){
 					},
 					freeze:true,
 					freeze_message:__('verifying OTP...'),
-					callback:function(response){
-						if(response.message && response.message.success){
+					callback:function(data){
+						if(data.message){
+							console.log('inside success response')
 							frappe.show_alert({
 								message:__('OTP verified successfully'),
 								indicator: 'green'

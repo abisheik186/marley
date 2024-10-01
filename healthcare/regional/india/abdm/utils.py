@@ -101,13 +101,13 @@ def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, p
 	print('b4 encr')
 	if config.get("encrypted"):
 		message = payload.get("to_encrypt")
-		if url_key == 'create_abha_w_aadhaar':
+		if url_key in ['create_abha_w_aadhaar','verify_abha_otp']:
 			message = payload.get('authData',{}).get('otp',{}).get('to_encrypt')
 		print('message = ',message)
 		encrypted = get_encrypted_message(message)
 		print('efter encrypt encrypted =',encrypted)
 		if "encrypted_msg" in encrypted and encrypted["encrypted_msg"]:
-			if url_key == 'create_abha_w_aadhaar' and 'to_encrypt' in payload['authData']['otp']:
+			if url_key in ['create_abha_w_aadhaar','verify_abha_otp'] and 'to_encrypt' in payload['authData']['otp']:
 				payload['authData']['otp'][to_be_enc] = payload['authData']['otp'].pop('to_encrypt')
 				print(12)
 				payload['authData']['otp'][to_be_enc] = encrypted['encrypted_msg']
@@ -220,7 +220,7 @@ def get_encrypted_message(message):
 			method=config.get("method"), url=url, headers={"Content-Type": "application/json"}
 		)
 
-		print("response of auth_cert",response)
+		print("response of auth_cert",response.text)
 		response.raise_for_status()
 		pub_key = response.text
 		pub_key = (
