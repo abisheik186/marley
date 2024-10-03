@@ -161,9 +161,7 @@ let get_patient_details = function(frm,txnId){
 	frappe.call({
 		method: 'healthcare.regional.india.abdm.utils.abdm_request',
 		args:{
-			'payload': {
-				'txnId':txnId
-			},
+			'txnId':txnId,
 			'url_key':'get_patient_details',
 			'req_type':'Health ID'
 		},

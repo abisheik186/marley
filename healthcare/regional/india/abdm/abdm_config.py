@@ -114,7 +114,11 @@ config = {
 		"url":"/v3/profile/login/verify",
 		"encrypted":True
 	},
-
+	"get_patient_details":{
+		"method":'POST',
+		"url":"/v3/profile/account",
+		"encrypted":False
+	},
 }
 
 
