@@ -102,7 +102,8 @@ let abha_otp_verify = function(frm,txnId){
 			{
 				label: 'Enter OTP',
 				fieldname:'abhaOtp',
-				fieldtype:'Data'
+				fieldtype:'Data',
+				reqd:1
 			}
 		],
 		primary_action_label:'OK',
@@ -157,23 +158,38 @@ let abha_otp_verify = function(frm,txnId){
 	});
 	dialog.show();
 };
-let get_patient_details = function(frm,txnId){
+let get_patient_details = function(frm,token){
+	console.log('inside get_patient_details')
 	frappe.call({
-		method: 'healthcare.regional.india.abdm.utils.abdm_request',
+		method: 'healthcare.regional.india.abdm.utils.get_health_data_details',
 		args:{
-			'txnId':txnId,
-			'url_key':'get_patient_details',
-			'req_type':'Health ID'
+			'token':token
 		},
 		freeze:true,
 		freeze_message:__('Fetching patient details...'),
 		callback: function(data){
-			if(Response.message){
-				set_data_to_form(frm,data.message);
+			if(data.message){
+				let patientData = data.message;
+
+				frm.set_value('abha_number',patientData.AbhaNumber);
+				frm.set_value('abha_address',patientData.preferredAbhaAddress);
+				frm.set_value('first_name', patientData.firstName);
+				frm.set_value('last_name', patientData.lastName);
+				frm.set_value('mobile', patientData.mobile);
+
+				let dob = `${patientData.dayOfBirth}-${patientData.monthOfBirth}-${patientData.yearOfBirth}`;
+				frm.set_value('dob', moment(dob, 'DD-MM-YYYY').format('YYYY-MM-DD'));
+
+				let gender = patientData.gender ==='M'? 'Male': patientData.gender === 'F' ? 'Feamale' : 'Other';
+				frm.set_value('pincode',patientData,pincode);
+
 				frappe.show_alert({
 					message:__('Patient details fetched successfully'),
 					indicator:'green'
 				});
+				if (patientData.profilePhoto){
+					get_abha_card(frm,token)
+				}
 			} else {
 				frappe.throw(__('Failed to fetch patient details'));
 			}
@@ -181,6 +197,31 @@ let get_patient_details = function(frm,txnId){
 	});
 };
 
+let get_abha_card = function(frm,token){
+	frappe.call({
+		method:'healthcare.regional.india.abdm.utils.abdm_request',
+		args:{
+			'payload':{},
+			'url_key':'get_card',
+			'rec_headers':{
+				'X-Token':'Bearer'+token
+			}
+		},
+		freeze:true,
+		freeze_message:__('Fetching ABHA card'),
+		callback: function(data){
+			if (data.message){
+				frm.set_value('abha_card',data.message);
+				frappe.show_alert({
+					message:__('ABHA card fetched successfully'),
+					indicator:'green'
+				});
+			} else {
+				frappe.throw(__('Failed to fetch ABHA card.'))
+			}
+		}
+	})
+}
 let verify_health_id = function (frm, recieved_abha_number = '') {
 	let d = new frappe.ui.Dialog({
 		title: 'Verify ABHA',
@@ -450,7 +491,7 @@ let create_abha = function (frm) {
 		}
 	});
 
-	let print_button = d.fields_dict.print_btn.$wrapper;
+	let print_button = d.fields_dict. print_btn.$wrapper;
 
 	print_button.html(
 		`<br><button class="btn btn-sm" style="float:left;" title="Print">
@@ -1039,8 +1080,7 @@ let show_id_card_dialog = function(frm, token) {
 		() =>{frappe.call({
 		method: 'healthcare.regional.india.abdm.utils.abdm_request',
 		args: {
-			'payload': {
-			},
+			'payload': {},
 			'url_key': 'get_card',
 			'req_type': 'Health ID',
 			'rec_headers': {

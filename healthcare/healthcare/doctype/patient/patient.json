@@ -68,7 +68,8 @@
   "alcohol_current_use",
   "column_break_32",
   "surrounding_factors",
-  "other_risk_factors"
+  "other_risk_factors",
+  "pincode"
  ],
  "fields": [
   {
@@ -483,13 +484,18 @@
    "fieldname": "medical_history_tab",
    "fieldtype": "Tab Break",
    "label": "Medical History"
+  },
+  {
+   "fieldname": "pincode",
+   "fieldtype": "Data",
+   "label": "pincode"
   }
  ],
  "icon": "fa fa-user",
  "image_field": "image",
  "links": [],
  "max_attachments": 50,
- "modified": "2023-01-13 17:48:59.069268",
+ "modified": "2024-10-07 18:01:16.167372",
  "modified_by": "Administrator",
  "module": "Healthcare",
  "name": "Patient",

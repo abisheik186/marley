@@ -300,7 +300,34 @@ def get_health_data(otp, txnId, auth_method):
 		response = abdm_request("", "get_acc_info", "Health ID", header, "")
 	return response, abha_url
 
+@frappe.whitelist()
+def get_health_data_details(token):
+	header = {'X-Token':'Bearer'+token}
+	patient_info_response = abdm_request('','get_patient_details','Health ID',header,'')
+	if not patient_info_response:
+		return {"error":"Failed to retrieve patient details"}
+	abha_card_url = get_abha_card(token) if token else ''
+	return {
+		"ABHANumber": patient_info_response.get("ABHANumber", ""),
+        "preferredAbhaAddress": patient_info_response.get("preferredAbhaAddress", ""),
+        "mobile": patient_info_response.get("mobile", ""),
+        "firstName": patient_info_response.get("firstName", ""),
+        "middleName": patient_info_response.get("middleName", ""),
+        "lastName": patient_info_response.get("lastName", ""),
+        "yearOfBirth": patient_info_response.get("yearOfBirth", ""),
+        "dayOfBirth": patient_info_response.get("dayOfBirth", ""),
+        "monthOfBirth": patient_info_response.get("monthOfBirth", ""),
+        "gender": patient_info_response.get("gender", ""),
+        "address": patient_info_response.get("address", ""),
+        "pincode": patient_info_response.get("pincode", ""),
+        "profilePhoto": patient_info_response.get("profilePhoto", ""),
+        "abha_card_url": abha_card_url,
+	}
+def get_abha_card(token):
+	headers = {'X-Token': 'Bearer'+token}
 
+	abha_card_response =abdm_request('','get_card','Health ID',headers,'')
+	return abha_card_response if abha_card_response else None
 # patient after_insert
 def set_consent_attachment_details(doc, method=None):
 	if frappe.db.exists(
