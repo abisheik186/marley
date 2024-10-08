@@ -180,15 +180,19 @@ let get_patient_details = function(frm,token){
 				let dob = `${patientData.dayOfBirth}-${patientData.monthOfBirth}-${patientData.yearOfBirth}`;
 				frm.set_value('dob', moment(dob, 'DD-MM-YYYY').format('YYYY-MM-DD'));
 
-				let gender = patientData.gender ==='M'? 'Male': patientData.gender === 'F' ? 'Feamale' : 'Other';
-				frm.set_value('pincode',patientData,pincode);
+				let gender = patientData.gender ==='M'? 'Male': patientData.gender === 'F' ? 'Female' : 'Other';
+				frm.set_value('sex',gender)
+				frm.set_value('pincode',patientData.pincode);
 
 				frappe.show_alert({
 					message:__('Patient details fetched successfully'),
 					indicator:'green'
 				});
-				if (patientData.profilePhoto){
-					get_abha_card(frm,token)
+				if (patientData.abha_card){
+					frappe.show_alert({
+						message:__('ABHA card fetched successfully'),
+						indicator:'green'
+					});
 				}
 			} else {
 				frappe.throw(__('Failed to fetch patient details'));

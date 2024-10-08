@@ -115,7 +115,7 @@ config = {
 		"encrypted":True
 	},
 	"get_patient_details":{
-		"method":'POST',
+		"method":'GET',
 		"url":"/v3/profile/account",
 		"encrypted":False
 	},

@@ -40,7 +40,8 @@ def get_authorization_token():
 	req.url = url
 	req.request_name = "Authorization Token"
 	request_id=str(uuid.uuid4())
-	timestamp=datetime.utcnow().isoformat()+'z'
+	utcnow=datetime.now(timezone.utc)
+	timestamp=utcnow.isoformat(timespec='milliseconds').replace('+00:00','Z')
 	print('timestamp of auth token',timestamp)
 	try:
 		response = requests.request(
@@ -77,6 +78,7 @@ def get_authorization_token():
 
 @frappe.whitelist()
 def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, patient_name=None):
+	print(f'payload={payload}, url_key={url_key}, req_type={req_type}, rec_headers={rec_headers}')
 	if payload and isinstance(payload, str):
 		payload = json.loads(payload)
 
@@ -132,7 +134,7 @@ def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, p
 	request_id=str(uuid.uuid4())
 	# timestamp=datetime.utcnow().isoformat()+'z'
 	utcnow=datetime.now(timezone.utc)
-	timestamp=utcnow.isoformat().replace('+00:00','Z')
+	timestamp=utcnow.isoformat(timespec='milliseconds').replace('+00:00','Z')
 	print('timestamp of abdm request',timestamp)
 	headers = {
 		"Content-Type": "application/json",
@@ -142,6 +144,10 @@ def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, p
 		"TIMESTAMP":timestamp,
 	}
 	if rec_headers:
+		print('inside rec_headers')
+		if url_key=='get_card':
+			print('inside rec_headers of url_key')
+			headers['Accept']='*/*'
 		if isinstance(rec_headers, str):
 			rec_headers = json.loads(rec_headers)
 		headers.update(rec_headers)
@@ -167,6 +173,7 @@ def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, p
 		print(response.json)
 		response.raise_for_status()
 		if url_key == "get_card":
+			print('block for save in file doctype')
 			pdf = response.content
 			_file = frappe.get_doc(
 				{
@@ -302,11 +309,13 @@ def get_health_data(otp, txnId, auth_method):
 
 @frappe.whitelist()
 def get_health_data_details(token):
-	header = {'X-Token':'Bearer'+token}
-	patient_info_response = abdm_request('','get_patient_details','Health ID',header,'')
+	print('inside get_health_data_details')
+	header = {'X-Token':'Bearer '+token}
+	patient_info_response = abdm_request('', 'get_patient_details', 'Health ID', header, '')
+	print('patient_info_response = ',patient_info_response)
 	if not patient_info_response:
 		return {"error":"Failed to retrieve patient details"}
-	abha_card_url = get_abha_card(token) if token else ''
+	abha_card = get_abha_card(token,patient_info_response.get('firstName')) if token else ''
 	return {
 		"ABHANumber": patient_info_response.get("ABHANumber", ""),
         "preferredAbhaAddress": patient_info_response.get("preferredAbhaAddress", ""),
@@ -321,12 +330,12 @@ def get_health_data_details(token):
         "address": patient_info_response.get("address", ""),
         "pincode": patient_info_response.get("pincode", ""),
         "profilePhoto": patient_info_response.get("profilePhoto", ""),
-        "abha_card_url": abha_card_url,
+        "abha_card": abha_card,
 	}
-def get_abha_card(token):
-	headers = {'X-Token': 'Bearer'+token}
-
-	abha_card_response =abdm_request('','get_card','Health ID',headers,'')
+def get_abha_card(token,patientName):
+	headers = {'X-Token': 'Bearer '+token}
+	print('inside get_abha_card')
+	abha_card_response =abdm_request('','get_card','Health ID',headers,patient_name=patientName)
 	return abha_card_response if abha_card_response else None
 # patient after_insert
 def set_consent_attachment_details(doc, method=None):
@@ -362,7 +371,7 @@ def set_consent_attachment_details(doc, method=None):
 				)
 
 
-def get_abha_card(token):
-	header = {"X-Token": "Bearer " + token}
-	response = abdm_request("", "get_card", "Health ID", header, "")
-	return response.get("file_url")
+# def get_abha_card(token):
+# 	header = {"X-Token": "Bearer " + token}
+# 	response = abdm_request("", "get_card", "Health ID", header, "")
+# 	return response.get("file_url")
