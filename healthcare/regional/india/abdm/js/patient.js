@@ -40,8 +40,8 @@ let search_by_abha_address = function (frm) {
 				hidden: 1
 			}
 		],
-		secondary_action_label: 'Search ABHA',
-		secondary_action(values) {
+		primary_action_label: 'Search ABHA',
+		primary_action(values) {
 			if (!dialog.get_value('abha_address')) {
 				frappe.throw({
 					message: __(`ABHA Address is required to search`),
@@ -140,7 +140,7 @@ let abha_otp_verify = function(frm,txnId){
 					freeze:true,
 					freeze_message:__('verifying OTP...'),
 					callback:function(data){
-						if(data.message){
+						if(data.message.token){
 							console.log('X-Token after verification : ',data.message.token)
 							frappe.show_alert({
 								message:__('OTP verified successfully'),
@@ -171,7 +171,7 @@ let get_patient_details = function(frm,token){
 			if(data.message){
 				let patientData = data.message;
 
-				frm.set_value('abha_number',patientData.AbhaNumber);
+				frm.set_value('abha_number',patientData.ABHANumber);
 				frm.set_value('abha_address',patientData.preferredAbhaAddress);
 				frm.set_value('first_name', patientData.firstName);
 				frm.set_value('last_name', patientData.lastName);
@@ -189,6 +189,7 @@ let get_patient_details = function(frm,token){
 					indicator:'green'
 				});
 				if (patientData.abha_card){
+					
 					frappe.show_alert({
 						message:__('ABHA card fetched successfully'),
 						indicator:'green'

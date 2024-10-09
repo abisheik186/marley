@@ -188,6 +188,9 @@ def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, p
 			)
 			_file.save()
 			frappe.db.commit()
+			req.response = json.dumps(response.json(), indent=4)
+			req.status = "Granted"
+			req.insert(ignore_permissions=True)
 			return _file
 		req.response = json.dumps(response.json(), indent=4)
 		req.status = "Granted"
@@ -335,7 +338,7 @@ def get_health_data_details(token):
 def get_abha_card(token,patientName):
 	headers = {'X-Token': 'Bearer '+token}
 	print('inside get_abha_card')
-	abha_card_response =abdm_request('','get_card','Health ID',headers,patient_name=patientName)
+	abha_card_response = abdm_request('','get_card','Health ID',headers,patient_name=patientName)
 	return abha_card_response if abha_card_response else None
 # patient after_insert
 def set_consent_attachment_details(doc, method=None):
@@ -375,3 +378,6 @@ def set_consent_attachment_details(doc, method=None):
 # 	header = {"X-Token": "Bearer " + token}
 # 	response = abdm_request("", "get_card", "Health ID", header, "")
 # 	return response.get("file_url")
+@frappe.whitelist()
+def ping():
+	return 'PONG'

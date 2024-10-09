@@ -23,7 +23,11 @@
   "image",
   "column_break_14",
   "status",
+  "abha_address",
+  "abha_number",
+  "abha_card",
   "uid",
+  "pincode",
   "inpatient_record",
   "inpatient_status",
   "report_preference",
@@ -68,8 +72,7 @@
   "alcohol_current_use",
   "column_break_32",
   "surrounding_factors",
-  "other_risk_factors",
-  "pincode"
+  "other_risk_factors"
  ],
  "fields": [
   {
@@ -489,16 +492,32 @@
    "fieldname": "pincode",
    "fieldtype": "Data",
    "label": "pincode"
+  },
+  {
+   "fieldname": "abha_address",
+   "fieldtype": "Data",
+   "label": "ABHA Address"
+  },
+  {
+   "fieldname": "abha_number",
+   "fieldtype": "Data",
+   "label": "ABHA Number"
+  },
+  {
+   "fieldname": "abha_card",
+   "fieldtype": "Attach",
+   "label": "ABHA Card"
   }
  ],
  "icon": "fa fa-user",
  "image_field": "image",
  "links": [],
  "max_attachments": 50,
- "modified": "2024-10-07 18:01:16.167372",
+ "modified": "2024-10-09 13:59:49.102788",
  "modified_by": "Administrator",
  "module": "Healthcare",
  "name": "Patient",
+ "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
   {

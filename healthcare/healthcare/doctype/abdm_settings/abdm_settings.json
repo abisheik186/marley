@@ -18,6 +18,8 @@
   "client_secret",
   "health_id_service_section",
   "health_id_base_url",
+  "health_information_linking",
+  "hi_linking_base_url",
   "consent_management_section",
   "consent_base_url",
   "patient_consent_template_tab",
@@ -106,11 +108,21 @@
    "fieldname": "patient_consent_template_tab",
    "fieldtype": "Tab Break",
    "label": "Patient Consent Template"
+  },
+  {
+   "fieldname": "health_information_linking",
+   "fieldtype": "Section Break",
+   "label": "Health Information Linking"
+  },
+  {
+   "fieldname": "hi_linking_base_url",
+   "fieldtype": "Data",
+   "label": "Base URL"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2023-01-14 19:03:21.188365",
+ "modified": "2024-10-09 10:33:52.871127",
  "modified_by": "Administrator",
  "module": "Healthcare",
  "name": "ABDM Settings",
