@@ -20,6 +20,9 @@
   "health_id_base_url",
   "health_information_linking",
   "hi_linking_base_url",
+  "column_break_9",
+  "cm_id",
+  "hip_id",
   "consent_management_section",
   "consent_base_url",
   "patient_consent_template_tab",
@@ -118,11 +121,25 @@
    "fieldname": "hi_linking_base_url",
    "fieldtype": "Data",
    "label": "Base URL"
+  },
+  {
+   "fieldname": "column_break_9",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hip_id",
+   "fieldtype": "Data",
+   "label": "HIP ID"
+  },
+  {
+   "fieldname": "cm_id",
+   "fieldtype": "Data",
+   "label": "CM ID"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-10-09 10:33:52.871127",
+ "modified": "2024-10-10 16:19:53.930272",
  "modified_by": "Administrator",
  "module": "Healthcare",
  "name": "ABDM Settings",

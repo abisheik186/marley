@@ -119,6 +119,11 @@ config = {
 		"url":"/v3/profile/account",
 		"encrypted":False
 	},
+	"link_token_generation":{
+		"method":"POST",
+		"url":"/v3/token/generate-token",
+		"encrypted":False
+	}
 }
 
 

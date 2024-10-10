@@ -1,5 +1,6 @@
 import json
 
+import frappe.defaults
 import requests
 
 import frappe
@@ -43,6 +44,7 @@ def get_authorization_token():
 	utcnow=datetime.now(timezone.utc)
 	timestamp=utcnow.isoformat(timespec='milliseconds').replace('+00:00','Z')
 	print('timestamp of auth token',timestamp)
+
 	try:
 		response = requests.request(
 			method=config.get("method"),
@@ -51,7 +53,8 @@ def get_authorization_token():
 				"Content-Type": "application/json",
 				"REQUEST-ID":request_id,
 				"TIMESTAMP":timestamp,
-				"X-CM-ID":"sbx"},
+				"X-CM-ID":"sbx"
+				},
 			data=json.dumps(payload),
 		)
 		print(response.raise_for_status)
@@ -63,6 +66,7 @@ def get_authorization_token():
 		return response.get("accessToken"), response.get("tokenType")
 
 	except Exception as e:
+		print(890)
 		try:
 			req.response = json.dumps(response.json(), indent=4)
 		except json.decoder.JSONDecodeError:
@@ -79,11 +83,20 @@ def get_authorization_token():
 @frappe.whitelist()
 def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, patient_name=None):
 	print(f'payload={payload}, url_key={url_key}, req_type={req_type}, rec_headers={rec_headers}')
+	sbx_id = ''
 	if payload and isinstance(payload, str):
 		payload = json.loads(payload)
 
 	if req_type == "Health ID":
 		url_type = "health_id_base_url"
+	elif req_type =="Health Info":
+		url_type = "hi_linking_base_url"
+		sbx_id = frappe.db.get_value(
+			"ABDM Settings",
+			{"company":frappe.defaults.get_user_default("company"),"default":1},
+			["cm_id"]
+		)
+		sbx_header={"X-CM-ID":sbx_id}
 
 	base_url = frappe.db.get_value(
 		"ABDM Settings",
@@ -143,6 +156,16 @@ def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, p
 		"REQUEST-ID":request_id,
 		"TIMESTAMP":timestamp,
 	}
+	if sbx_id:
+		headers.update(sbx_header)
+	if url_key in ['link_token_generation']:
+		hip_id=frappe.db.get_value(
+			"ABDM Settings",
+			{"company": frappe.defaults.get_user_default("Company"), "default": 1},
+			["hip_id"]
+		)
+		headers.update({"X-HIP-ID":hip_id})
+
 	if rec_headers:
 		print('inside rec_headers')
 		if url_key=='get_card':
@@ -170,6 +193,11 @@ def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, p
 		print(url)
 		print('payload after api hit',payload)
 		print('header after api call',headers)
+		# if url_key in ['link_token_generation']:
+		# 	if response.status_code == 202:
+		# 		req.response = '202 Accepted'
+		# 		req.status = "Granted"
+		# 		return "202 Accepted"
 		print(response.json)
 		response.raise_for_status()
 		if url_key == "get_card":
