@@ -193,11 +193,12 @@ def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, p
 		print(url)
 		print('payload after api hit',payload)
 		print('header after api call',headers)
-		# if url_key in ['link_token_generation']:
-		# 	if response.status_code == 202:
-		# 		req.response = '202 Accepted'
-		# 		req.status = "Granted"
-		# 		return "202 Accepted"
+		if url_key in ['link_token_generation']:
+			if response.status_code == 202:
+				req.response = '202 Accepted'
+				req.status = "Granted"
+				req.insert(ignore_permissions=True)
+				return "202 Accepted"
 		print(response.json)
 		response.raise_for_status()
 		if url_key == "get_card":
@@ -225,11 +226,17 @@ def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, p
 		req.insert(ignore_permissions=True)
 		return response.json()
 
-	except Exception as e:
-		req.traceback = e
+	except requests.exceptions.RequestException as e:
+		req.traceback = str(e)
 		print("Exception block executed in abdm_request")
 		# print(response.json)
-		req.response = json.dumps(response.json(), indent=4)
+		if response:
+			try:
+				req.response = json.dumps(response.json(), indent=4)
+			except ValueError:
+				req.response = response.text
+		else:
+			req.response = "No response recieved"
 		req.status = "Revoked"
 		req.insert(ignore_permissions=True)
 		traceback = f"Remote URL {url}\nPayload: {payload}\nTraceback: {e}"
@@ -253,6 +260,7 @@ def get_encrypted_message(message):
 	req.url = url
 	req.request_name = "auth_cert"
 	print('cert url =',url)
+	response = None
 	try:
 		response = requests.request(
 			method=config.get("method"), url=url, headers={"Content-Type": "application/json"}
@@ -266,6 +274,7 @@ def get_encrypted_message(message):
 			.replace("-----BEGIN PUBLIC KEY-----", "")
 			.replace("-----END PUBLIC KEY-----", "")
 		)
+		print('public key = ',pub_key)
 		if pub_key:
 			encrypted_msg = get_rsa_encrypted_message(message, pub_key)
 			req.response = encrypted_msg
@@ -274,9 +283,15 @@ def get_encrypted_message(message):
 		encrypted = {"public_key": pub_key, "encrypted_msg": encrypted_msg}
 		return encrypted
 
-	except Exception as e:
-		req.traceback = e
-		req.response = json.dumps(response.json(), indent=4)
+	except requests.exceptions.RequestException as e:
+		req.traceback = str(e)
+		if response:
+			try:
+				req.response = json.dumps(response.json(), indent=4)
+			except ValueError:
+				req.response = response.text
+		else:
+			req.response = "No response recieved"
 		req.status = "Revoked"
 		req.insert(ignore_permissions=True)
 		traceback = f"Remote URL {url}\nTraceback: {e}"
