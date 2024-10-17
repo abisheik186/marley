@@ -217,10 +217,11 @@ def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, p
 			)
 			_file.save()
 			frappe.db.commit()
-			req.response = json.dumps(response.json(), indent=4)
+			req.response = response.text
 			req.status = "Granted"
 			req.insert(ignore_permissions=True)
-			return _file
+			print("after abha card saved")
+			return "abha card saved successfully"
 		req.response = json.dumps(response.json(), indent=4)
 		req.status = "Granted"
 		req.insert(ignore_permissions=True)
@@ -241,7 +242,7 @@ def abdm_request(payload, url_key, req_type, rec_headers=None, to_be_enc=None, p
 		req.insert(ignore_permissions=True)
 		traceback = f"Remote URL {url}\nPayload: {payload}\nTraceback: {e}"
 		frappe.log_error(message=traceback, title="Cant complete API call")
-		return response.json()
+		return response#.json()
 
 
 def get_encrypted_message(message):
