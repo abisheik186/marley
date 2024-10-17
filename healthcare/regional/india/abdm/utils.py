@@ -362,7 +362,7 @@ def get_health_data_details(token):
 	print('patient_info_response = ',patient_info_response)
 	if not patient_info_response:
 		return {"error":"Failed to retrieve patient details"}
-	abha_card = get_abha_card(token,patient_info_response.get('firstName')) if token else ''
+	abha_card = get_abha_card(token,patient_info_response.get('name')) if token else ''
 	return {
 		"ABHANumber": patient_info_response.get("ABHANumber", ""),
         "preferredAbhaAddress": patient_info_response.get("preferredAbhaAddress", ""),

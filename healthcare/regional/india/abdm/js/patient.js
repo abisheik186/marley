@@ -805,57 +805,81 @@ let create_abha_with_aadhaar = function(frm, d) {
 							freeze_message: __(`<br><br><br>Creating Health ID <br>
 								<small>Please note, this may take a while</small>`),
 							callback: function (data) {
-								if (data.message['healthIdNumber']) {
-									dialog.hide()
-									frappe.run_serially([
-										() =>frappe.db.get_value('Patient', {abha_number: data.message['healthIdNumber'],
-												name: ['!=', frm.doc.name]	}, ['name', 'abha_card'])
-											.then(r =>{
-												if (r.message.name) {
-													frappe.set_route("Form", "Patient", r.message.name);
-													if (r.message.abha_card) {
-														frappe.throw({
-															message: __(`{0}`,
-															["<img src='"+ r.message.abha_card + "'>"]),
-															title: __("Patient already exist")
-														});
-													} else {
-														frappe.throw({
-															message: __(`{0}`,
-															['<a href="/app/patient/'+r.message.name+'">' + r.message.name + '</a>']),
-															title: __("Patient already exist")
-														});
-													}
-												}
-											}),
-										() => {
-											set_data_to_form(frm, data.message, dialog, d)
-											if (data.message['token']) {
-												show_id_card_dialog(frm, data.message['token'])
-											}
-											if (data.message['new'] == false) {
-												frappe.show_alert({
-													message: __('Fetched existing ABHA of aadhaar provided'),
-													indicator: 'green' }, 5);
-											} else {
-												frappe.show_alert({
-													message: __('ABHA ID created successfully'),
-													indicator: 'green' }, 5);
-											}
-											// frm.save()
-											dialog.hide();
-										},
-									])
-								} else {
-									dialog.get_primary_btn().attr('disabled', false);
-									if (data.message && data.message.details[0]['message']) {
-										show_message(dialog, data.message.message, 'red',
-										data.message.details[0]['message'], 'otp')
-									}
+								if (data.message.tokens.token){
 									frappe.show_alert({
-										message: __('ABHA ID not Created'),
-										indicator: 'red' }, 5);
+										message:__('OTP verified successfully'),
+										indicator:'green'
+									});
+									dialog.hide();
+									get_patient_details(frm,data.message.tokens.token);
+									if (data.message.isNew){
+										frappe.show_alert({
+											message:__('New ABHA account created Successfully'),
+											indicator:'blue'
+										});
+									} else{
+										frappe.show_alert({
+											message:__('Fetched existing ABHA of AADHAAR provided'),
+											indicator:'green'
+										});
+									}
+								} else{
+									frappe.throw(__('Failed to verify OTP.Please try again.'));
 								}
+								// if(data.message.tokens.token){
+								// 	console.log(data.message.tokens.token)
+								// }
+								// if (data.message['healthIdNumber']) {
+								// 	dialog.hide()
+								// 	frappe.run_serially([
+								// 		() =>frappe.db.get_value('Patient', {abha_number: data.message['healthIdNumber'],
+								// 				name: ['!=', frm.doc.name]	}, ['name', 'abha_card'])
+								// 			.then(r =>{
+								// 				if (r.message.name) {
+								// 					frappe.set_route("Form", "Patient", r.message.name);
+								// 					if (r.message.abha_card) {
+								// 						frappe.throw({
+								// 							message: __(`{0}`,
+								// 							["<img src='"+ r.message.abha_card + "'>"]),
+								// 							title: __("Patient already exist")
+								// 						});
+								// 					} else {
+								// 						frappe.throw({
+								// 							message: __(`{0}`,
+								// 							['<a href="/app/patient/'+r.message.name+'">' + r.message.name + '</a>']),
+								// 							title: __("Patient already exist")
+								// 						});
+								// 					}
+								// 				}
+								// 			}),
+								// 		() => {
+								// 			set_data_to_form(frm, data.message, dialog, d)
+								// 			if (data.message['token']) {
+								// 				show_id_card_dialog(frm, data.message['token'])
+								// 			}
+								// 			if (data.message['new'] == false) {
+								// 				frappe.show_alert({
+								// 					message: __('Fetched existing ABHA of aadhaar provided'),
+								// 					indicator: 'green' }, 5);
+								// 			} else {
+								// 				frappe.show_alert({
+								// 					message: __('ABHA ID created successfully'),
+								// 					indicator: 'green' }, 5);
+								// 			}
+								// 			// frm.save()
+								// 			dialog.hide();
+								// 		},
+								// 	])
+								// } else {
+								// 	dialog.get_primary_btn().attr('disabled', false);
+								// 	if (data.message && data.message.details[0]['message']) {
+								// 		show_message(dialog, data.message.message, 'red',
+								// 		data.message.details[0]['message'], 'otp')
+								// 	}
+								// 	frappe.show_alert({
+								// 		message: __('ABHA ID not Created'),
+								// 		indicator: 'red' }, 5);
+								// }
 							}
 						});
 					}
